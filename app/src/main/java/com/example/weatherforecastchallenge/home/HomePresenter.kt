@@ -1,6 +1,6 @@
 package com.example.weatherforecastchallenge.home
 
-import com.example.weatherforecastchallenge.WeatherModel
+import com.example.weatherforecastchallenge.weather.WeatherModel
 import java.lang.ref.WeakReference
 
 interface HomePresenterInput {

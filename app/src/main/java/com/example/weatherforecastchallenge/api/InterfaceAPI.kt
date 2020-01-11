@@ -1,7 +1,6 @@
 package com.example.weatherforecastchallenge.api
 
-import com.example.weatherforecastchallenge.WeatherModel
-import io.reactivex.Observable
+import com.example.weatherforecastchallenge.weather.WeatherModel
 import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Path

@@ -3,6 +3,7 @@ package com.example.weatherforecastchallenge.home
 import android.content.Context
 import android.os.StrictMode
 import com.example.weatherforecastchallenge.api.APICore
+import com.example.weatherforecastchallenge.weather.WeatherWorker
 
 
 interface HomeInteractorInput {
@@ -12,6 +13,7 @@ interface HomeInteractorInput {
 class HomeInteractor : HomeInteractorInput {
 
     var output: HomePresenterInput? = null
+    val weatherWorker = WeatherWorker()
 
     override fun fetchWeatherData(context : Context, request: WeatherForecastRequest) {
 
@@ -20,14 +22,9 @@ class HomeInteractor : HomeInteractorInput {
             StrictMode.setThreadPolicy(policy)
         }
 
-        var weaterData = APICore().getAPI(context).getWeatherData(
-            request.latitude,
-            request.longitude,
-            "pt",
-            "hourly,flags")
-            .blockingGet()
+        var weatherData = weatherWorker!!.getWeatherData(context, request.latitude, request.longitude)
 
-        output?.presentWeatherData(weaterData)
+        output?.presentWeatherData(weatherData)
 
     }
 }

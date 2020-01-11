@@ -9,7 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 
 import com.example.weatherforecastchallenge.R
-import com.example.weatherforecastchallenge.WeatherModel
+import com.example.weatherforecastchallenge.weather.WeatherModel
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -50,7 +50,7 @@ class HomeFragment : Fragment(), HomeFragmentInput {
     }
 
     override fun displayWeatherData(weatherData : WeatherModel) {
-
+        Log.v("testando!!!!", weatherData.daily!!.summary)
     }
 
 }

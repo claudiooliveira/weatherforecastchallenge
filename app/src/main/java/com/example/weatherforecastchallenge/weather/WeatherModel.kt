@@ -1,4 +1,4 @@
-package com.example.weatherforecastchallenge
+package com.example.weatherforecastchallenge.weather
 
 import com.google.gson.annotations.Expose
 
