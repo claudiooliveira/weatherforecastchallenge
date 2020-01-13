@@ -10,7 +10,7 @@ import org.robolectric.RobolectricTestRunner
 class WeatherWorkerTest{
 
     @Test
-    fun getWatherData_shouldReturn_weatherData() {
+    fun getWeatherData_shouldReturn_weatherData() {
 
         val weatherWorker = WeatherWorker()
         val weatherData = weatherWorker.getWeatherData(ApplicationProvider.getApplicationContext(), -24.0368638,-46.5370516)

@@ -13,7 +13,7 @@ class WeatherWorker : WeatherWorkerInput {
             latitude,
             longitude,
             "pt",
-            "hourly,flags")
-            .blockingGet()
+            "hourly,flags"
+        ).blockingGet()
     }
 }

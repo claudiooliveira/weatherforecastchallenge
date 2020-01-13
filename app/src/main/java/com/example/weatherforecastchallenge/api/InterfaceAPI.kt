@@ -13,7 +13,8 @@ interface InterfaceAPI {
         @Path("lat") lat : Double,
         @Path("lng") lng : Double,
         @Query("lang") lang : String,
-        @Query("exclude") exclude : String
+        @Query("exclude") exclude : String,
+        @Query("units") units : String = "si"
     ) : Single<WeatherModel>
 
 }

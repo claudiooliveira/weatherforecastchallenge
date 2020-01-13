@@ -1,5 +1,6 @@
 package com.example.weatherforecastchallenge.home
 
+import android.view.View
 import com.example.weatherforecastchallenge.weather.WeatherModel
 import java.lang.ref.WeakReference
 
