@@ -24,6 +24,7 @@ data class WeatherDataModel (
     @Expose var summary : String,
     @Expose var icon : String,
     @Expose var temperature : Float,
+    @Expose var apparentTemperature : Float,
     @Expose var temperatureHigh : Float,
     @Expose var temperatureLow : Float,
     @Expose var humidity : Float

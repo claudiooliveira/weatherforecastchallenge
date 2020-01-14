@@ -70,6 +70,27 @@ object DateUtils {
         }
     }
 
+    fun checkIfDayOrNight(): String {
+        val f = SimpleDateFormat("HH")
+        var newDate: Date? = null
+        try {
+            newDate = f.parse(f.format(Date()))
+        } catch (e: ParseException) {
+            e.printStackTrace()
+        }
+
+        if (newDate != null) {
+            var time = f.format(newDate).toInt()
+            if (time in 5..19) {
+                return "day"
+            }else{
+                return "night"
+            }
+        } else {
+            return "Invalid date"
+        }
+    }
+
     fun parse(date : String) : Date? {
         val f = SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
         var newDate: Date? = null

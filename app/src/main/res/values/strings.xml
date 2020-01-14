@@ -1,9 +1,7 @@
 <resources>
     <string name="app_name">Weather Forecast Challenge</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
-
     <string name="of">de</string>
+    <string name="apparent_temperature">Sensação térmica</string>
 
 </resources>

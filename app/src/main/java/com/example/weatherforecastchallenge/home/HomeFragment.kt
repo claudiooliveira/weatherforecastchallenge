@@ -5,6 +5,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -15,12 +16,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.example.weatherforecastchallenge.Consts
 
 import com.example.weatherforecastchallenge.R
 import com.example.weatherforecastchallenge.utils.DateUtils
+import com.example.weatherforecastchallenge.utils.getWeatherIconFlat
+import com.example.weatherforecastchallenge.utils.getWeatherIconSolid
 import com.example.weatherforecastchallenge.weather.WeatherDataModel
 import com.example.weatherforecastchallenge.weather.WeatherModel
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -43,10 +47,15 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
     lateinit var output: HomeInteractorInput
     lateinit var weatherData : WeatherModel
     lateinit var txtDegrees : TextView
+    lateinit var txtAddress : TextView
     lateinit var txtTitle : TextView
+    lateinit var txtApparentTemperature : TextView
     lateinit var rvNextDays : RecyclerView
+    lateinit var imgWeatherIcon : ImageView
     var latitude : Double = 0.0
     var longitude : Double = 0.0
+    var state = ""
+    var city = ""
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -54,6 +63,7 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
         //Configure fragment to connect with interactor
@@ -62,13 +72,14 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         //Bind views...
         bindViews(view)
 
-        //Request user location
+        //Request user location (when the user allows the location, we will get the weather data again with current location)
         requestUserLocation()
 
         //Fetch weather data
         fetchData()
 
         return view
+
     }
 
     @SuppressLint("MissingPermission")
@@ -78,6 +89,10 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 latitude = location!!.latitude
                 longitude = location!!.longitude
+                val geocoder = Geocoder(context!!, Locale.getDefault())
+                val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                state = addresses[0].adminArea
+                city = addresses[0].subAdminArea
                 fetchData()
             }
         }else{
@@ -102,7 +117,10 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
     fun bindViews(view : View) {
         txtDegrees = view.findViewById(R.id.txtDegrees)
+        txtAddress = view.findViewById(R.id.txtAddress)
         txtTitle = view.findViewById(R.id.txtTitle)
+        txtApparentTemperature = view.findViewById(R.id.txtApparentTemperature)
+        imgWeatherIcon = view.findViewById(R.id.imgWeatherIcon)
         rvNextDays = view.findViewById(R.id.rvNextDays)
     }
 
@@ -111,17 +129,25 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         output.fetchWeatherData(context!!, request)
     }
 
+    override fun displayCurrentAddress() {
+        txtAddress.text = "${city}, ${state}"
+    }
+
     override fun displayWeatherData(weatherData : WeatherModel) {
 
         this.weatherData = weatherData
 
-        //Display current date
         displayCurrentDate()
 
-        //Display current temperature
+        //Display current user address based on location
+        displayCurrentAddress()
+
         displayDegrees()
 
-        //Display forecast for next days
+        displayApparentTemperature()
+
+        displayWeatherIcon()
+
         displayForecastNextDays()
 
     }
@@ -134,6 +160,14 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
     override fun displayDegrees() {
         txtDegrees.text = Math.round(weatherData.currently!!.temperature).toString()
+    }
+
+    override fun displayApparentTemperature() {
+        txtApparentTemperature.text = "${weatherData.currently!!.summary}\n${resources.getString(R.string.apparent_temperature)}: ${Math.round(weatherData.currently!!.apparentTemperature)}ºC"
+    }
+
+    override fun displayWeatherIcon() {
+        imgWeatherIcon.setImageDrawable(getWeatherIconFlat(context!!, weatherData.currently!!.icon))
     }
 
     override fun displayForecastNextDays() {
@@ -170,15 +204,16 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val weatherData = nextDaysData[position]
             holder?.let {
-                it.bindView(weatherData)
+                it.bindView(context, weatherData)
             }
         }
 
         class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            fun bindView(weatherData: WeatherDataModel) {
+            fun bindView(context : Context, weatherData: WeatherDataModel) {
                 var weekday = DateUtils.getDateFromFormat(DateUtils.unixTimestampToDate(weatherData.time), "EEEE").capitalize()
                 var date = DateUtils.getDateFromFormat(DateUtils.unixTimestampToDate(weatherData.time), "DD/MM");
                 itemView.txtTemperature.text = "${date} - ${weekday} -  Min. ${Math.round(weatherData.temperatureLow)}ºC - Máx. ${Math.round(weatherData.temperatureHigh)}ºC"
+                itemView.imgWeatherIcon.setImageDrawable(getWeatherIconSolid(context!!, weatherData.icon))
             }
         }
 
