@@ -4,12 +4,16 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import com.example.weatherforecastchallenge.home.HomeFragment
+import com.example.weatherforecastchallenge.utils.DateUtils
 import com.example.weatherforecastchallenge.utils.transact
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        if (DateUtils.checkIfDayOrNight() == "night") {
+            setTheme(R.style.AppTheme_NightTheme)
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)

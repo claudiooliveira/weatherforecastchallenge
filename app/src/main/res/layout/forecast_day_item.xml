@@ -3,19 +3,50 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="8dp">
+    android:padding="14dp"
+    android:background="?android:selectableItemBackground"
+    android:focusable="true"
+    android:clickable="true"
+    android:id="@+id/containerLayout"
+    android:orientation="vertical">
 
-    <TextView
-        android:text="TextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/txtTemperature"
-        android:layout_weight="1"
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@android:color/transparent">
+        <TextView
+                android:text="TextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/txtTemperature"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
         />
-    <ImageView
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            app:srcCompat="@drawable/clear_day_solid"
-            android:id="@+id/imgWeatherIcon"
-            />
+        <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                app:srcCompat="@drawable/clear_day_solid"
+                android:id="@+id/imgWeatherIcon"
+                android:tint="@color/white"
+                android:background="@android:color/transparent"
+        />
+    </LinearLayout>
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:id="@+id/expandedLayout"
+            android:visibility="gone"
+            android:background="@android:color/transparent">
+        <TextView
+                android:text="TextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/txtSummary"
+                android:layout_weight="1"
+                android:background="@android:color/transparent"
+                android:textStyle="bold"
+        />
+    </LinearLayout>
 </LinearLayout>

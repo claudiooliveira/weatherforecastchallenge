@@ -16,6 +16,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -30,7 +32,6 @@ import com.example.weatherforecastchallenge.weather.WeatherModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.forecast_day_item.view.*
-import java.lang.Exception
 import java.util.*
 
 /**
@@ -52,10 +53,15 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
     lateinit var txtApparentTemperature : TextView
     lateinit var rvNextDays : RecyclerView
     lateinit var imgWeatherIcon : ImageView
+    lateinit var currentWeatherLayout : LinearLayout
     var latitude : Double = 0.0
     var longitude : Double = 0.0
     var state = ""
     var city = ""
+    lateinit var fadeFromTopToBottomAnim : Animation
+    lateinit var zoomOutAnim : Animation
+    lateinit var fadeFromLeftToRightSlowAnim : Animation
+    lateinit var bounceRotateFromTopAnim : Animation
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -65,6 +71,11 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_home, container, false)
+
+        fadeFromTopToBottomAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_top_to_bottom)
+        zoomOutAnim = AnimationUtils.loadAnimation(context!!, R.anim.zoom_out)
+        fadeFromLeftToRightSlowAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_left_to_right_slow)
+        bounceRotateFromTopAnim = AnimationUtils.loadAnimation(context!!, R.anim.bounce_rotate_from_top)
 
         //Configure fragment to connect with interactor
         HomeConfigurator.configureFragment(this)
@@ -119,6 +130,7 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         txtDegrees = view.findViewById(R.id.txtDegrees)
         txtAddress = view.findViewById(R.id.txtAddress)
         txtTitle = view.findViewById(R.id.txtTitle)
+        currentWeatherLayout = view.findViewById(R.id.currentWeatherLayout)
         txtApparentTemperature = view.findViewById(R.id.txtApparentTemperature)
         imgWeatherIcon = view.findViewById(R.id.imgWeatherIcon)
         rvNextDays = view.findViewById(R.id.rvNextDays)
@@ -131,6 +143,7 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
     override fun displayCurrentAddress() {
         txtAddress.text = "${city}, ${state}"
+        txtAddress.animation = fadeFromTopToBottomAnim
     }
 
     override fun displayWeatherData(weatherData : WeatherModel) {
@@ -156,18 +169,22 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         var weekday = DateUtils.getDateFromFormat(Date(), "EEEE").capitalize()
         var currentDate = DateUtils.getCurrentDateFromFormat("DD '${resources.getString(R.string.of)}' MMM")
         txtTitle.text = "${weekday}, ${currentDate}"
+        txtTitle.animation = fadeFromTopToBottomAnim
     }
 
     override fun displayDegrees() {
         txtDegrees.text = Math.round(weatherData.currently!!.temperature).toString()
+        currentWeatherLayout.animation = zoomOutAnim
     }
 
     override fun displayApparentTemperature() {
         txtApparentTemperature.text = "${weatherData.currently!!.summary}\n${resources.getString(R.string.apparent_temperature)}: ${Math.round(weatherData.currently!!.apparentTemperature)}ºC"
+        txtApparentTemperature.animation = fadeFromTopToBottomAnim
     }
 
     override fun displayWeatherIcon() {
         imgWeatherIcon.setImageDrawable(getWeatherIconFlat(context!!, weatherData.currently!!.icon))
+        imgWeatherIcon.animation = bounceRotateFromTopAnim
     }
 
     override fun displayForecastNextDays() {
@@ -175,6 +192,7 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         var forecastNextDays = weatherData.daily!!.data
         rvNextDays.adapter = ForecastNextDaysAdapter(forecastNextDays.drop(1), context!!) //Since the challenge requires displaying the forecast next 7 days, I used list.drop (1) to remove the first item, because the API returns the current day in this array as well.
         rvNextDays.layoutManager = LinearLayoutManager(context!!, LinearLayout.VERTICAL, false)
+
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -190,11 +208,54 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
     * I decided to create it in here because we will not use it in another situation.
     **/
 
-    class ForecastNextDaysAdapter(val nextDaysData : List<WeatherDataModel>, val context : Context) : RecyclerView.Adapter<ForecastNextDaysAdapter.ViewHolder>() {
+    class ForecastNextDaysAdapter(val nextDaysData : List<WeatherDataModel>, val context : Context) : RecyclerView.Adapter<ForecastNextDaysAdapter.ViewHolder>(), View.OnClickListener {
+
+        var isViewExpanded = false
+        val slideFromTopToBottomAnim = AnimationUtils.loadAnimation(context!!, R.anim.slide_from_top_to_bottom)
+        val slideFromBottomToTopAnim = AnimationUtils.loadAnimation(context!!, R.anim.slide_from_bottom_to_top)
+        lateinit var view : View
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = LayoutInflater.from(context).inflate(R.layout.forecast_day_item, parent, false)
+            view = LayoutInflater.from(context).inflate(R.layout.forecast_day_item, parent, false)
+            view.setOnClickListener(this)
+            if (!isViewExpanded) {
+                view.expandedLayout.visibility = View.GONE
+                view.expandedLayout.isEnabled = false
+            }
             return ViewHolder(view)
+        }
+
+        override fun onClick(view: View?) {
+
+            if (view!!.expandedLayout.visibility == View.GONE) {
+                view!!.expandedLayout.animation = slideFromTopToBottomAnim
+                isViewExpanded = true
+                view!!.expandedLayout.visibility = View.VISIBLE
+                view!!.expandedLayout.isEnabled = true
+                slideFromTopToBottomAnim.start()
+            }else{
+
+                slideFromBottomToTopAnim.setAnimationListener(object : Animation.AnimationListener {
+                    override fun onAnimationRepeat(animation: Animation?) {
+
+                    }
+
+                    override fun onAnimationEnd(animation: Animation?) {
+                        view!!.expandedLayout.visibility = View.GONE
+                        view!!.expandedLayout.isEnabled = false
+                        isViewExpanded = false
+                    }
+
+                    override fun onAnimationStart(animation: Animation?) {
+
+                    }
+                })
+
+                view!!.expandedLayout.animation = slideFromBottomToTopAnim
+                isViewExpanded = false
+                slideFromBottomToTopAnim.start()
+
+            }
         }
 
         override fun getItemCount(): Int {
@@ -204,16 +265,20 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val weatherData = nextDaysData[position]
             holder?.let {
-                it.bindView(context, weatherData)
+                it.bindView(context, weatherData, position + 1)
             }
         }
 
         class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            fun bindView(context : Context, weatherData: WeatherDataModel) {
-                var weekday = DateUtils.getDateFromFormat(DateUtils.unixTimestampToDate(weatherData.time), "EEEE").capitalize()
-                var date = DateUtils.getDateFromFormat(DateUtils.unixTimestampToDate(weatherData.time), "DD/MM");
-                itemView.txtTemperature.text = "${date} - ${weekday} -  Min. ${Math.round(weatherData.temperatureLow)}ºC - Máx. ${Math.round(weatherData.temperatureHigh)}ºC"
+            fun bindView(context : Context, weatherData: WeatherDataModel, position : Int) {
+                val fadeFromLeftToRightSlowAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_left_to_right_slow)
+                var weekday = DateUtils.getDateFromFormat(DateUtils.unixTimestampToDate(weatherData.time), "EE").capitalize()
+                var date = DateUtils.getDateFromFormat(DateUtils.unixTimestampToDate(weatherData.time), "DD/MM")
+                itemView.txtTemperature.text = "${date} - ${weekday}. -  Min. ${Math.round(weatherData.temperatureLow)}ºC - Máx. ${Math.round(weatherData.temperatureHigh)}ºC"
                 itemView.imgWeatherIcon.setImageDrawable(getWeatherIconSolid(context!!, weatherData.icon))
+                fadeFromLeftToRightSlowAnim.duration = (300 * position).toLong()
+                itemView.containerLayout.animation = fadeFromLeftToRightSlowAnim
+                itemView.txtSummary.text = "${weatherData.summary}"
             }
         }
 

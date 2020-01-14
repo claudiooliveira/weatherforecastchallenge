@@ -23,7 +23,6 @@ class HomeInteractor : HomeInteractorInput {
         }
 
         var weatherData = weatherWorker!!.getWeatherData(context, request.latitude, request.longitude)
-
         output?.presentWeatherData(weatherData)
 
     }
