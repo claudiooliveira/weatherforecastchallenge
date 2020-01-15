@@ -2,7 +2,7 @@ package com.example.weatherforecastchallenge.home
 
 import android.content.Context
 import android.os.StrictMode
-import com.example.weatherforecastchallenge.api.APICore
+import com.example.weatherforecastchallenge.weather.WeatherForecastRequest
 import com.example.weatherforecastchallenge.weather.WeatherWorker
 
 

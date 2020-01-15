@@ -15,6 +15,7 @@ https://www.youtube.com/watch?v=i-fAoSjflZU
 * Animações
 * Localização do usuário para exibir o clima da sua região
 * Padrão MVP
+* Android Priority Job Queue (https://github.com/yigit/android-priority-jobqueue) para requisições assíncronas (Infelizmente não pude utilizar o WorkManager por conta do Android X, eu precisaria aumentar a versão mínima do SDK)
 
 ## Créditos
 

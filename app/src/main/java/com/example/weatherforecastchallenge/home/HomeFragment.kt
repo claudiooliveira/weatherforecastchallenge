@@ -8,11 +8,11 @@ import android.content.pm.PackageManager
 import android.location.Geocoder
 import android.location.Location
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,17 +21,25 @@ import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import com.example.weatherforecastchallenge.BaseApp
 import com.example.weatherforecastchallenge.Consts
 
 import com.example.weatherforecastchallenge.R
 import com.example.weatherforecastchallenge.utils.DateUtils
+import com.example.weatherforecastchallenge.utils.LoadingDialog
 import com.example.weatherforecastchallenge.utils.getWeatherIconFlat
 import com.example.weatherforecastchallenge.utils.getWeatherIconSolid
+import com.example.weatherforecastchallenge.weather.GetWeatherDataEvent
 import com.example.weatherforecastchallenge.weather.WeatherDataModel
+import com.example.weatherforecastchallenge.weather.WeatherForecastRequest
 import com.example.weatherforecastchallenge.weather.WeatherModel
+import com.example.weatherforecastchallenge.jobs.GetWeatherDataJob
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.android.synthetic.main.forecast_day_item.view.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.util.*
 
 /**
@@ -54,10 +62,13 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
     lateinit var rvNextDays : RecyclerView
     lateinit var imgWeatherIcon : ImageView
     lateinit var currentWeatherLayout : LinearLayout
+    lateinit var homeContraintLayout : ConstraintLayout
     var latitude : Double = 0.0
     var longitude : Double = 0.0
     var state = ""
     var city = ""
+    var isLoading = false
+    lateinit var dialog : LoadingDialog
     lateinit var fadeFromTopToBottomAnim : Animation
     lateinit var zoomOutAnim : Animation
     lateinit var fadeFromLeftToRightSlowAnim : Animation
@@ -72,10 +83,10 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        fadeFromTopToBottomAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_top_to_bottom)
-        zoomOutAnim = AnimationUtils.loadAnimation(context!!, R.anim.zoom_out)
-        fadeFromLeftToRightSlowAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_left_to_right_slow)
-        bounceRotateFromTopAnim = AnimationUtils.loadAnimation(context!!, R.anim.bounce_rotate_from_top)
+        dialog = LoadingDialog(activity!!)
+
+        //Load all animations
+        loadAnimations()
 
         //Configure fragment to connect with interactor
         HomeConfigurator.configureFragment(this)
@@ -83,19 +94,24 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
         //Bind views...
         bindViews(view)
 
-        //Request user location (when the user allows the location, we will get the weather data again with current location)
+        //Request user location
         requestUserLocation()
-
-        //Fetch weather data
-        fetchData()
 
         return view
 
     }
 
+    fun loadAnimations() {
+        fadeFromTopToBottomAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_top_to_bottom)
+        zoomOutAnim = AnimationUtils.loadAnimation(context!!, R.anim.zoom_out)
+        fadeFromLeftToRightSlowAnim = AnimationUtils.loadAnimation(context!!, R.anim.fade_from_left_to_right_slow)
+        bounceRotateFromTopAnim = AnimationUtils.loadAnimation(context!!, R.anim.bounce_rotate_from_top)
+    }
+
     @SuppressLint("MissingPermission")
     fun requestUserLocation() {
         if (checkPermissions()) {
+            showLoading()
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(context!!)
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 latitude = location!!.latitude
@@ -127,6 +143,7 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
     }
 
     fun bindViews(view : View) {
+        homeContraintLayout = view.findViewById(R.id.homeContraintLayout)
         txtDegrees = view.findViewById(R.id.txtDegrees)
         txtAddress = view.findViewById(R.id.txtAddress)
         txtTitle = view.findViewById(R.id.txtTitle)
@@ -138,7 +155,12 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
     fun fetchData() {
         val request = WeatherForecastRequest(latitude, longitude)
-        output.fetchWeatherData(context!!, request)
+        BaseApp.getCurrentJobManager()!!.addJobInBackground(
+            GetWeatherDataJob(
+                request
+            )
+        )
+        showLoading()
     }
 
     override fun displayCurrentAddress() {
@@ -195,11 +217,53 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
     }
 
+    override fun showLoading() {
+        loading(true)
+        homeContraintLayout.visibility = View.INVISIBLE
+    }
+
+    override fun hideLoading() {
+        loading(false)
+        homeContraintLayout.visibility = View.VISIBLE
+    }
+
+    fun loading(show : Boolean) {
+        if (show && !isLoading) {
+            isLoading = true
+            dialog.showDialog()
+        }else if (!show && isLoading) {
+            isLoading = false
+            dialog.hideDialog()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(event : GetWeatherDataEvent) {
+
+        hideLoading()
+        displayWeatherData(event.weatherData)
+
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == Consts.GEOLOCATION_PERMISSIONS_ID) {
             if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                 requestUserLocation()
+            }else{
+                fetchData()
             }
+        }else{
+            fetchData()
         }
     }
 

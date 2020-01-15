@@ -1,6 +1,7 @@
 package com.example.weatherforecastchallenge.home
 
 import androidx.test.core.app.ApplicationProvider
+import com.example.weatherforecastchallenge.weather.WeatherForecastRequest
 import com.example.weatherforecastchallenge.weather.WeatherModel
 import org.junit.Assert
 import org.junit.Test
@@ -15,7 +16,7 @@ class HomeInteractorTest {
     fun fetchWeatherData_with_validInput_shouldCall_presentWeatherData() {
 
         val homeInteractor = HomeInteractor()
-        val request = WeatherForecastRequest(-24.0368638,-46.5370516)
+        val request = WeatherForecastRequest(-24.0368638, -46.5370516)
         val homePresenterInputSpy = HomePresenterInputSpy()
 
         homeInteractor.output = homePresenterInputSpy

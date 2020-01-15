@@ -7,4 +7,6 @@ interface HomeView {
     fun displayApparentTemperature()
     fun displayWeatherIcon()
     fun displayForecastNextDays()
+    fun showLoading()
+    fun hideLoading()
 }
