@@ -4,7 +4,7 @@ Aplicativo de previsão do tempo desenvolvido em Kotlin para desafio proposto.
 
 Android 4.4+
 
-## Demo
+## Preview
 
 https://youtu.be/G2SNSl7i3Qw
 
