@@ -6,7 +6,7 @@ Android 4.4+
 
 ## Demo
 
-https://www.youtube.com/watch?v=i-fAoSjflZU
+https://youtu.be/G2SNSl7i3Qw
 
 ## Características da aplicação
 

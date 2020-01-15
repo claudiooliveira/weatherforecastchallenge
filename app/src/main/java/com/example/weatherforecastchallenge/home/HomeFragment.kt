@@ -110,8 +110,8 @@ class HomeFragment : Fragment(), HomeFragmentInput, HomeView {
 
     @SuppressLint("MissingPermission")
     fun requestUserLocation() {
+        showLoading()
         if (checkPermissions()) {
-            showLoading()
             fusedLocationClient = LocationServices.getFusedLocationProviderClient(context!!)
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 latitude = location!!.latitude
